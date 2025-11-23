@@ -227,6 +227,20 @@ export default function ClientePage() {
                         <Store className="w-3 h-3" />
                         Negocio
                     </Button>
+
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs hover:bg-orange-50 gap-1 text-slate-700 relative"
+                        onClick={() => setIsCartOpen(true)}
+                    >
+                        <ShoppingCart className="w-4 h-4" />
+                        {cart.length > 0 && (
+                            <span className="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold w-3.5 h-3.5 flex items-center justify-center rounded-full">
+                                {totalItems}
+                            </span>
+                        )}
+                    </Button>
                 </div>
             </header>
 
@@ -300,6 +314,30 @@ export default function ClientePage() {
                     </div>
                 )}
             </main>
+
+            {/* FLOATING CART BUTTON */}
+            <AnimatePresence>
+                {cart.length > 0 && (
+                    <motion.div
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0, opacity: 0 }}
+                        className="fixed bottom-6 right-6 z-50"
+                    >
+                        <Button
+                            onClick={() => setIsCartOpen(true)}
+                            className="h-16 w-16 rounded-full bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-xl hover:shadow-2xl hover:scale-105 transition-all flex flex-col items-center justify-center gap-1 border-4 border-white/20 backdrop-blur-sm"
+                        >
+                            <div className="relative">
+                                <ShoppingCart className="w-6 h-6" />
+                                <span className="absolute -top-2 -right-2 bg-white text-orange-600 text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full shadow-sm">
+                                    {totalItems}
+                                </span>
+                            </div>
+                        </Button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* DRAWER DEL CARRITO */}
             <Drawer open={isCartOpen} onOpenChange={setIsCartOpen}>
