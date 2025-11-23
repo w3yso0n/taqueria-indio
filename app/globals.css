@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+@theme {
+    --font-sans: 'Inter', 'Manrope', system-ui, sans-serif;
+
+    --color-primary: #0EA5E9;
+    --color-primary-foreground: #ffffff;
+
+    --color-secondary: #1E293B;
+    --color-secondary-foreground: #ffffff;
+
+    --color-muted: #F1F5F9;
+    --color-muted-foreground: #64748B;
+
+    --color-accent: #F1F5F9;
+    --color-accent-foreground: #0F172A;
+
+    --color-destructive: #EF4444;
+    --color-destructive-foreground: #ffffff;
+
+    --color-border: #E2E8F0;
+    --color-input: #E2E8F0;
+    --color-ring: #0EA5E9;
+
+    --radius-lg: 0.5rem;
+    --radius-md: calc(0.5rem - 2px);
+    --radius-sm: calc(0.5rem - 4px);
+}
+
+/* Custom Utilities */
+@utility container {
+    margin-inline: auto;
+    padding-inline: 2rem;
+
+    @media (width >=1400px) {
+        max-width: 1400px;
+    }
+}
+
+/* Base Styles */
+@layer base {
+    * {
+        @apply border-border;
+    }
+
+    body {
+        @apply bg-gray-50 text-slate-900 font-sans antialiased;
+    }
+}
+
+
+
+
+:root {
+    --background: #ffffff;
+    --foreground: #171717;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --background: #0a0a0a;
+        --foreground: #ededed;
+    }
+}
+
+body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans), sans-serif;
+}
