@@ -20,7 +20,7 @@ export async function GET(request: Request) {
                 SUM(total) as total 
              FROM pedidos 
              WHERE DATE(createdAt) = ? 
-             AND estado != 'CANCELADO'
+             AND estado = 'ENTREGADO'
              GROUP BY metodoPago`,
             [dateStr]
         );

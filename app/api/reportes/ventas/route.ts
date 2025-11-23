@@ -14,7 +14,7 @@ export async function GET(request: Request) {
                 SUM(total) as total 
              FROM pedidos 
              WHERE createdAt >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
-             AND estado != 'CANCELADO'
+             AND estado = 'ENTREGADO'
              GROUP BY DATE(createdAt)
              ORDER BY fecha ASC`,
             [days]

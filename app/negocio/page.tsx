@@ -23,6 +23,8 @@ export interface Pedido {
             nombre: string;
         };
         cantidad: number;
+        varianteNombre?: string;
+        notas?: string;
     }[];
     metodoPago?: string;
     createdAt: string;
@@ -168,22 +170,21 @@ export default function NegocioPage() {
                                                         <div className="space-y-1 mb-3">
                                                             {pedido.items.map((item, idx) => (
                                                                 <div key={idx} className="text-sm text-slate-600 border-b border-dashed border-slate-100 last:border-0 py-1">
-                                                                    <div className="flex justify-between">
-                                                                        <span><span className="font-bold text-slate-800">{item.cantidad}x</span> {item.producto.nombre}</span>
-                                                                    </div>
-                                                                    {/* @ts-ignore */}
-                                                                    {item.opcionesSeleccionadas && (
-                                                                        <div className="text-xs text-slate-600 mt-0.5 pl-4">
-                                                                            {/* @ts-ignore */}
-                                                                            {Object.entries(item.opcionesSeleccionadas).map(([key, value]) => (
-                                                                                <span key={key} className="block">
-                                                                                    {key}: {value as string}
-                                                                                </span>
-                                                                            ))}
+                                                                    <div className="flex flex-col">
+                                                                        <div className="flex justify-between">
+                                                                            <span><span className="font-bold text-slate-800">{item.cantidad}x</span> {item.producto.nombre}</span>
                                                                         </div>
-                                                                    )}
-                                                                    {/* @ts-ignore */}
-                                                                    {item.notas && <div className="text-xs text-amber-600 mt-0.5 pl-4 italic">"{item.notas}"</div>}
+                                                                        {item.varianteNombre && (
+                                                                            <div className="text-xs text-slate-500 pl-4">
+                                                                                {item.varianteNombre}
+                                                                            </div>
+                                                                        )}
+                                                                        {item.notas && (
+                                                                            <div className="text-xs text-amber-600 pl-4 italic">
+                                                                                "{item.notas}"
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
                                                                 </div>
                                                             ))}
                                                         </div>
