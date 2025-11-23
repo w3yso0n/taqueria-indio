@@ -8,7 +8,7 @@ export function Navbar() {
             <div className="container flex h-16 items-center justify-between">
                 <div className="flex items-center gap-2">
                     <Link href="/" className="flex items-center space-x-2">
-                        <span className="text-xl font-bold text-primary">ElToldito</span>
+                        <span className="text-xl font-bold text-primary">Taqueria "El Indio"</span>
                     </Link>
                 </div>
 

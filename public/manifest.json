@@ -1,6 +1,6 @@
 {
-    "name": "ElToldito",
-    "short_name": "ElToldito",
+    "name": "Taqueria El Indio",
+    "short_name": "Taqueria El Indio",
     "description": "Gestión de pedidos para negocios",
     "start_url": "/",
     "display": "standalone",

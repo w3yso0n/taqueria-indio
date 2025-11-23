@@ -9,8 +9,8 @@ import { cn } from "@/lib/utils";
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
-  title: "ElToldito",
-  description: "Gestión de pedidos",
+  title: "Taqueria El Indio",
+  description: "Auténticos tacos mexicanos - Gestión de pedidos",
   manifest: "/manifest.json",
   viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0",
 };

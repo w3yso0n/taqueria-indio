@@ -184,7 +184,7 @@ export default function ClientePage() {
     const totalItems = cart.reduce((sum, item) => sum + item.cantidad, 0);
 
     const handleBusinessAccess = () => {
-        if (password === "chocoydani") {
+        if (password === "12345678") {
             setShowPasswordDialog(false);
             router.push("/negocio");
         } else {
@@ -194,26 +194,26 @@ export default function ClientePage() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-violet-50 via-sky-50 to-emerald-50 pb-24">
+        <div className="min-h-screen bg-gradient-to-br from-orange-50 via-yellow-50 to-red-50 pb-24">
 
             {/* HEADER */}
-            <header className="fixed top-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-b border-violet-100/50 z-40 px-4 h-16 flex items-center justify-between shadow-lg shadow-violet-100/20">
+            <header className="fixed top-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-b border-orange-100/50 z-40 px-4 h-16 flex items-center justify-between shadow-lg shadow-orange-100/20">
                 <div className="flex items-center gap-3">
-                    <div className="bg-gradient-to-br from-violet-500 to-sky-500 p-2 rounded-xl shadow-lg">
+                    <div className="bg-gradient-to-br from-orange-500 to-red-500 p-2 rounded-xl shadow-lg">
                         <Utensils className="text-white w-5 h-5" />
                     </div>
-                    <h1 className="font-bold text-xl bg-gradient-to-r from-violet-600 to-sky-600 bg-clip-text text-transparent">ElToldito</h1>
+                    <h1 className="font-bold text-xl bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">Taqueria El Indio</h1>
                 </div>
 
                 <div className="flex items-center gap-2">
                     <Link href="/contacto">
-                        <Button variant="ghost" size="sm" className="text-xs hover:bg-violet-50 text-slate-700">
+                        <Button variant="ghost" size="sm" className="text-xs hover:bg-orange-50 text-slate-700">
                             Contacto
                         </Button>
                     </Link>
 
                     <Link href="/">
-                        <Button variant="ghost" size="sm" className="text-xs hover:bg-violet-50 text-slate-700">
+                        <Button variant="ghost" size="sm" className="text-xs hover:bg-orange-50 text-slate-700">
                             Inicio
                         </Button>
                     </Link>
@@ -221,37 +221,18 @@ export default function ClientePage() {
                     <Button
                         variant="ghost"
                         size="sm"
-                        className="text-xs hover:bg-violet-50 gap-1 text-slate-700"
+                        className="text-xs hover:bg-orange-50 gap-1 text-slate-700"
                         onClick={() => setShowPasswordDialog(true)}
                     >
                         <Store className="w-3 h-3" />
                         Negocio
-                    </Button>
-
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setIsCartOpen(true)}
-                        className="relative hover:bg-violet-50"
-                    >
-                        <ShoppingCart className="w-6 h-6 text-slate-700" />
-
-                        {totalItems > 0 && (
-                            <motion.span
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                className="absolute -top-1 -right-1 bg-gradient-to-br from-violet-500 to-sky-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white shadow-lg"
-                            >
-                                {totalItems}
-                            </motion.span>
-                        )}
                     </Button>
                 </div>
             </header>
 
             {/* MAIN */}
             <main className="container mx-auto px-4 pt-24 max-w-5xl">
-                <h2 className="text-3xl font-bold bg-gradient-to-r from-violet-600 to-sky-600 bg-clip-text text-transparent">
+                <h2 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
                     Menú
                 </h2>
 
@@ -259,7 +240,7 @@ export default function ClientePage() {
                 {loading ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                         {[1, 2, 3, 4, 5, 6].map(i => (
-                            <Card key={i} className="overflow-hidden border-violet-100/50">
+                            <Card key={i} className="overflow-hidden border-orange-100/50">
                                 <Skeleton className="h-48 w-full" />
                                 <CardHeader>
                                     <Skeleton className="h-6 w-3/4" />
@@ -280,22 +261,22 @@ export default function ClientePage() {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.4, delay: index * 0.05 }}
                             >
-                                <Card className="group overflow-hidden hover:shadow-2xl hover:shadow-violet-200/50 transition-all duration-300 border-violet-100/50 bg-white/80 backdrop-blur-sm h-full flex flex-col hover:-translate-y-1">
-                                    <div className="aspect-video bg-gradient-to-br from-violet-100 to-sky-100 relative overflow-hidden">
+                                <Card className="group overflow-hidden hover:shadow-2xl hover:shadow-orange-200/50 transition-all duration-300 border-orange-100/50 bg-white/80 backdrop-blur-sm h-full flex flex-col hover:-translate-y-1">
+                                    <div className="aspect-video bg-gradient-to-br from-orange-100 to-yellow-100 relative overflow-hidden">
                                         {producto.imagen ? (
                                             <img src={producto.imagen} alt={producto.nombre} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                                         ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-4xl text-violet-300">
+                                            <div className="w-full h-full flex items-center justify-center text-4xl text-orange-300">
                                                 <Utensils />
                                             </div>
                                         )}
 
-                                        <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-xl font-bold text-violet-600 shadow-lg border border-violet-100/50">
+                                        <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-xl font-bold text-orange-600 shadow-lg border border-orange-100/50">
                                             ${producto.precio}
                                         </div>
 
                                         {producto.variantes && producto.variantes.length > 0 && (
-                                            <div className="absolute bottom-3 left-3 bg-sky-500/90 backdrop-blur-md px-2 py-1 rounded-lg text-xs font-bold text-white shadow-lg">
+                                            <div className="absolute bottom-3 left-3 bg-red-500/90 backdrop-blur-md px-2 py-1 rounded-lg text-xs font-bold text-white shadow-lg">
                                                 Variantes
                                             </div>
                                         )}
@@ -308,8 +289,7 @@ export default function ClientePage() {
                                     <CardFooter className="mt-auto pt-4">
                                         <Button
                                             onClick={() => handleAddToCartClick(producto)}
-                                            className="w-full bg-gradient-to-r from-violet-500 to-sky-500 hover:from-violet-600 hover:to-sky-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 font-semibold"
-                                        >
+                                            className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 font-semibold">
                                             <Plus className="w-4 h-4 mr-2" />
                                             Agregar
                                         </Button>
@@ -323,10 +303,10 @@ export default function ClientePage() {
 
             {/* DRAWER DEL CARRITO */}
             <Drawer open={isCartOpen} onOpenChange={setIsCartOpen}>
-                <DrawerContent className="bg-gradient-to-br from-violet-50/95 to-sky-50/95 backdrop-blur-xl border-violet-200/50">
+                <DrawerContent className="bg-gradient-to-br from-orange-50/95 to-yellow-50/95 backdrop-blur-xl border-orange-200/50">
                     <div className="mx-auto w-full max-w-lg">
                         <DrawerHeader>
-                            <DrawerTitle className="text-3xl bg-gradient-to-r from-violet-600 to-sky-600 bg-clip-text text-transparent">Tu Pedido</DrawerTitle>
+                            <DrawerTitle className="text-3xl bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">Tu Pedido</DrawerTitle>
                             <DrawerDescription className="text-slate-600">Revisa tus items</DrawerDescription>
                         </DrawerHeader>
 
@@ -348,7 +328,7 @@ export default function ClientePage() {
                                         initial={{ opacity: 0, x: -20 }}
                                         animate={{ opacity: 1, x: 0 }}
                                         exit={{ opacity: 0, x: 20 }}
-                                        className="flex items-center justify-between bg-white/80 backdrop-blur-md p-4 rounded-2xl border border-violet-100/50 shadow-lg"
+                                        className="flex items-center justify-between bg-white/80 backdrop-blur-md p-4 rounded-2xl border border-orange-100/50 shadow-lg"
                                     >
                                         <div className="flex-1">
                                             <div className="font-semibold text-slate-900">{item.producto.nombre}</div>
@@ -357,7 +337,7 @@ export default function ClientePage() {
                                                     {item.varianteNombre}
                                                 </div>
                                             )}
-                                            <div className="text-sm text-violet-600 font-medium">${item.precioCalculado}</div>
+                                            <div className="text-sm text-orange-600 font-medium">${item.precioCalculado}</div>
                                         </div>
 
                                         <div className="flex items-center gap-2">
@@ -378,10 +358,10 @@ export default function ClientePage() {
                         </div>
 
                         {/* TOTAL Y BOTÓN */}
-                        <div className="p-4 border-t border-violet-200/50 bg-white/60 backdrop-blur-md">
+                        <div className="p-4 border-t border-orange-200/50 bg-white/60 backdrop-blur-md">
                             <div className="flex justify-between items-center mb-5">
                                 <span className="text-xl font-semibold text-slate-700">Total</span>
-                                <span className="text-3xl font-bold bg-gradient-to-r from-violet-600 to-sky-600 bg-clip-text text-transparent">${total}</span>
+                                <span className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">${total}</span>
                             </div>
 
                             <Input
@@ -392,7 +372,7 @@ export default function ClientePage() {
                             />
 
                             <Button
-                                className="w-full bg-gradient-to-r from-violet-500 to-sky-500 text-white font-semibold"
+                                className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold"
                                 onClick={handleSubmit}
                                 disabled={submitting}
                             >
@@ -405,9 +385,9 @@ export default function ClientePage() {
 
             {/* DIALOG DE VARIANTES */}
             <Dialog open={optionsModalOpen} onOpenChange={setOptionsModalOpen}>
-                <DialogContent className="bg-gradient-to-br from-violet-50 to-sky-50">
+                <DialogContent className="bg-gradient-to-br from-orange-50 to-red-50">
                     <DialogHeader>
-                        <DialogTitle className="text-2xl bg-gradient-to-r from-violet-600 to-sky-600 bg-clip-text text-transparent">
+                        <DialogTitle className="text-2xl bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
                             {selectedProduct?.nombre}
                         </DialogTitle>
                         <DialogDescription>
@@ -423,7 +403,7 @@ export default function ClientePage() {
                                     <Label htmlFor={`variant-${variante.id}`} className="flex-1 cursor-pointer">
                                         <div className="flex justify-between items-center">
                                             <span className="font-medium text-slate-800">{variante.nombre}</span>
-                                            <span className="font-bold text-violet-600">${variante.precio}</span>
+                                            <span className="font-bold text-orange-600">${variante.precio}</span>
                                         </div>
                                     </Label>
                                 </div>
@@ -437,7 +417,7 @@ export default function ClientePage() {
                         </Button>
                         <Button
                             onClick={confirmOptions}
-                            className="bg-gradient-to-r from-violet-500 to-sky-500 hover:from-violet-600 hover:to-sky-600 text-white"
+                            className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white"
                         >
                             <Plus className="w-4 h-4 mr-2" />
                             Agregar al Carrito
@@ -448,20 +428,20 @@ export default function ClientePage() {
 
             {/* DIALOG DE ÉXITO */}
             <Dialog open={successOpen} onOpenChange={setSuccessOpen}>
-                <DialogContent className="bg-gradient-to-br from-violet-50 via-white to-sky-50 border-2 border-violet-200">
+                <DialogContent className="bg-gradient-to-br from-orange-50 via-white to-red-50 border-2 border-orange-200">
                     <div className="text-center py-6">
                         <div className="mb-4">
                             <div className="text-7xl mb-4 animate-bounce">🎉</div>
-                            <DialogTitle className="text-3xl font-bold bg-gradient-to-r from-violet-600 to-sky-600 bg-clip-text text-transparent mb-3">
+                            <DialogTitle className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent mb-3">
                                 ¡Pedido Recibido!
                             </DialogTitle>
                             <DialogDescription className="text-lg text-slate-600 px-4">
                                 Tu orden ha sido enviada.<br />
-                                <span className="font-semibold text-violet-600">Te avisaremos cuando esté lista.</span>
+                                <span className="font-semibold text-orange-600">Te avisaremos cuando esté lista.</span>
                             </DialogDescription>
                         </div>
 
-                        <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 mb-6 border border-violet-100">
+                        <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 mb-6 border border-orange-100">
                             <p className="text-sm text-slate-500 mb-2">Gracias por tu preferencia</p>
                             <p className="text-2xl font-bold text-slate-800">¡Buen provecho! 🍽️</p>
                         </div>
@@ -471,7 +451,7 @@ export default function ClientePage() {
                                 setSuccessOpen(false);
                                 router.push('/');
                             }}
-                            className="w-full bg-gradient-to-r from-violet-500 to-sky-500 hover:from-violet-600 hover:to-sky-600 text-white font-semibold text-lg py-6 shadow-lg hover:shadow-xl transition-all"
+                            className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold text-lg py-6 shadow-lg hover:shadow-xl transition-all"
                         >
                             ¡Perfecto!
                         </Button>
@@ -501,7 +481,7 @@ export default function ClientePage() {
                         <Button variant="outline" onClick={() => setShowPasswordDialog(false)} className="text-slate-700">
                             Cancelar
                         </Button>
-                        <Button onClick={handleBusinessAccess} className="text-white bg-gradient-to-r from-violet-500 to-sky-500 hover:from-violet-600 hover:to-sky-600">
+                        <Button onClick={handleBusinessAccess} className="text-white bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600">
                             Acceder
                         </Button>
                     </DialogFooter>

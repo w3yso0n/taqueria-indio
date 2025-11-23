@@ -249,7 +249,7 @@ export default function ProductosPage() {
                     <div className="bg-sky-500 p-1 rounded">
                         <Package className="w-5 h-5 text-white" />
                     </div>
-                    ElToldito Admin
+                    Taqueria El Indio
                 </div>
 
                 <nav className="flex-1 space-y-2">

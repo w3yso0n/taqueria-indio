@@ -21,7 +21,7 @@ export default function Home() {
   }, [router])
 
   const handleBusinessAccess = () => {
-    if (password === "chocoydani") {
+    if (password === "12345678") {
       setShowPasswordDialog(false)
       setPassword("")
       router.push("/negocio")
@@ -32,18 +32,18 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-sky-50 to-white p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-orange-50 to-yellow-50 p-4">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
         className="text-center space-y-4"
       >
-        <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-slate-900">
-          Orden<span className="text-sky-500">Eya</span>
+        <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight bg-gradient-to-r from-orange-600 via-red-600 to-yellow-600 bg-clip-text text-transparent">
+          Taqueria El Indio
         </h1>
-        <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-          Redirigiendo al menú...
+        <p className="text-xl text-slate-700 max-w-2xl mx-auto">
+          Auténticos tacos mexicanos 🌮
         </p>
 
         {/* Discrete business link */}
