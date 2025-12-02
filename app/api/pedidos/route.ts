@@ -27,14 +27,24 @@ interface Pedido {
     updatedAt: string;
 }
 
-export async function GET() {
+export async function GET(request: Request) {
     try {
+        const { searchParams } = new URL(request.url);
+        const filter = searchParams.get('filter') || 'today';
+
+        let queryStr = `SELECT id, clienteNombre, tipo, estado, metodoPago, total, createdAt, updatedAt 
+             FROM pedidos`;
+
+        const queryParams: any[] = [];
+
+        if (filter === 'today') {
+            queryStr += ` WHERE DATE(createdAt) = CURDATE()`;
+        }
+
+        queryStr += ` ORDER BY createdAt DESC`;
+
         // Get all pedidos
-        const pedidos = await query<RowDataPacket[]>(
-            `SELECT id, clienteNombre, tipo, estado, metodoPago, total, createdAt, updatedAt 
-             FROM pedidos 
-             ORDER BY createdAt DESC`
-        );
+        const pedidos = await query<RowDataPacket[]>(queryStr, queryParams);
 
         // For each pedido, get its items
         const pedidosWithItems = await Promise.all(

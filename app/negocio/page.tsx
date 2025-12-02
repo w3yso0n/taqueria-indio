@@ -1,28 +1,40 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import useSWR from 'swr';
 import { api } from '../../lib/api';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { ArrowRight, ArrowLeft, Clock, CheckCircle2, ChefHat, Package, Banknote, CreditCard, HelpCircle, X } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Clock, CheckCircle2, ChefHat, Package, Banknote, CreditCard, HelpCircle, X, LogOut, Plus, Calendar, History, Minus, Printer } from 'lucide-react';
+import { printTicket } from '../../lib/print-ticket';
+import { renderOrderTicketToString } from '../../components/tickets/OrderTicket';
+import { renderReceiptTicketToString } from '../../components/tickets/ReceiptTicket';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
 
 export interface Pedido {
     id: number;
     clienteNombre: string;
     estado: string;
+    tipo: string;
     total: number;
     items: {
+        id: number;
         producto: {
             nombre: string;
         };
+        productoNombre: string;
         cantidad: number;
+        precioUnitario: number;
         varianteNombre?: string;
         notas?: string;
     }[];
@@ -30,13 +42,14 @@ export interface Pedido {
     createdAt: string;
 }
 
-const fetcher = (url: string) => api.get(url);
+interface Producto {
+    id: number;
+    nombre: string;
+    precio: number;
+    variantes?: { id: number; nombre: string; precio: number; activo: boolean }[];
+}
 
-const PAYMENT_METHODS = [
-    { id: 'Efectivo', icon: Banknote, color: 'text-green-600 bg-green-50' },
-    { id: 'Tarjeta', icon: CreditCard, color: 'text-blue-600 bg-blue-50' },
-    { id: 'Transferencia', icon: ArrowLeft, color: 'text-purple-600 bg-purple-50' },
-];
+const fetcher = (url: string) => api.get(url);
 
 const COLUMNS = [
     { id: 'RECIBIDO', title: 'Recibido', color: 'bg-blue-50 border-blue-200', icon: Clock, badgeColor: 'bg-blue-500' },
@@ -47,12 +60,36 @@ const COLUMNS = [
 ];
 
 export default function NegocioPage() {
-    const { data: pedidos, error, mutate } = useSWR<Pedido[]>('/pedidos', fetcher, {
+    const router = useRouter();
+    const [filter, setFilter] = useState<'today' | 'all'>('today');
+    const { data: pedidos, error, mutate } = useSWR<Pedido[]>(`/pedidos?filter=${filter}`, fetcher, {
         refreshInterval: 5000,
     });
 
+    // Add Item State
+    const [isAddingItem, setIsAddingItem] = useState(false);
+    const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
+    const [products, setProducts] = useState<Producto[]>([]);
+    const [selectedProduct, setSelectedProduct] = useState<Producto | null>(null);
+    const [selectedVariantId, setSelectedVariantId] = useState('');
+    const [quantity, setQuantity] = useState(1);
+    const [submittingItem, setSubmittingItem] = useState(false);
+
+    useEffect(() => {
+        api.get('/productos').then(setProducts).catch(console.error);
+    }, []);
+
+    const handleLogout = async () => {
+        try {
+            await api.post('/auth/logout', {});
+            toast.success('Sesión cerrada');
+            router.push('/login');
+        } catch (error) {
+            toast.error('Error al cerrar sesión');
+        }
+    };
+
     const handleStatusChange = async (id: number, newStatus: string) => {
-        // Optimistic update
         const updatedPedidos = pedidos?.map(p => p.id === id ? { ...p, estado: newStatus } : p);
         mutate(updatedPedidos, false);
 
@@ -63,7 +100,7 @@ export default function NegocioPage() {
         } catch (error) {
             console.error('Error updating status:', error);
             toast.error("Error al actualizar estado");
-            mutate(); // Revert on error
+            mutate();
         }
     };
 
@@ -82,6 +119,82 @@ export default function NegocioPage() {
         }
     };
 
+    const openAddItemModal = (orderId: number) => {
+        setSelectedOrderId(orderId);
+        setSelectedProduct(null);
+        setSelectedVariantId('');
+        setQuantity(1);
+        setIsAddingItem(true);
+    };
+
+    const handlePrintOrderTicket = (pedido: Pedido) => {
+        const ticketHtml = renderOrderTicketToString({
+            orderId: pedido.id,
+            customerName: pedido.clienteNombre,
+            orderType: pedido.tipo || 'Para llevar',
+            items: pedido.items.map(item => ({
+                id: item.id,
+                productoNombre: item.producto?.nombre || item.productoNombre || '',
+                cantidad: item.cantidad,
+                notas: item.notas,
+                varianteNombre: item.varianteNombre
+            })),
+            createdAt: pedido.createdAt,
+            printedBy: 'admin@taqueria.com'
+        });
+        printTicket(ticketHtml).catch(err => {
+            console.error('Print error:', err);
+            toast.error('Error al imprimir comanda');
+        });
+    };
+
+    const handlePrintReceiptTicket = (pedido: Pedido) => {
+        const ticketHtml = renderReceiptTicketToString({
+            orderId: pedido.id,
+            customerName: pedido.clienteNombre,
+            orderType: pedido.tipo || 'Para llevar',
+            items: pedido.items.map(item => ({
+                id: item.id,
+                productoNombre: item.producto?.nombre || item.productoNombre || '',
+                cantidad: item.cantidad,
+                precioUnitario: item.precioUnitario || 0,
+                varianteNombre: item.varianteNombre
+            })),
+            total: pedido.total,
+            paymentMethod: pedido.metodoPago,
+            createdAt: pedido.createdAt,
+            printedBy: 'admin@taqueria.com'
+        });
+        printTicket(ticketHtml).catch(err => {
+            console.error('Print error:', err);
+            toast.error('Error al imprimir cuenta');
+        });
+    };
+
+    const handleAddItemSubmit = async () => {
+        if (!selectedProduct || (selectedProduct.variantes && selectedProduct.variantes.length > 0 && !selectedVariantId)) {
+            toast.error('Por favor selecciona un producto y variante');
+            return;
+        }
+
+        setSubmittingItem(true);
+        try {
+            await api.post(`/pedidos/${selectedOrderId}/items`, {
+                productoId: selectedProduct.id,
+                varianteId: selectedVariantId || null,
+                cantidad: quantity,
+            });
+            toast.success('Producto agregado');
+            setIsAddingItem(false);
+            mutate();
+        } catch (error) {
+            console.error(error);
+            toast.error('Error al agregar producto');
+        } finally {
+            setSubmittingItem(false);
+        }
+    };
+
     if (error) return <div className="p-8 text-center text-red-500">Error al cargar pedidos</div>;
 
     return (
@@ -94,6 +207,25 @@ export default function NegocioPage() {
                     <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Panel de Cocina</h1>
                 </div>
                 <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
+                    <div className="bg-white p-1 rounded-lg border border-slate-200 flex items-center">
+                        <Button
+                            variant={filter === 'today' ? 'secondary' : 'ghost'}
+                            size="sm"
+                            onClick={() => setFilter('today')}
+                            className={`text-xs ${filter === 'today' ? 'bg-slate-100 font-bold' : 'text-slate-500'}`}
+                        >
+                            <Calendar className="w-3 h-3 mr-1" /> Hoy
+                        </Button>
+                        <Button
+                            variant={filter === 'all' ? 'secondary' : 'ghost'}
+                            size="sm"
+                            onClick={() => setFilter('all')}
+                            className={`text-xs ${filter === 'all' ? 'bg-slate-100 font-bold' : 'text-slate-500'}`}
+                        >
+                            <History className="w-3 h-3 mr-1" /> Historial
+                        </Button>
+                    </div>
+
                     <Link href="/negocio/productos">
                         <Button variant="outline" size="sm" className="bg-white text-xs sm:text-sm text-slate-700">
                             <span className="hidden sm:inline">Gestionar </span>Productos
@@ -108,6 +240,14 @@ export default function NegocioPage() {
                         <span className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
                         En vivo
                     </Badge>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleLogout}
+                        className="text-slate-500 hover:text-red-600 hover:bg-red-50"
+                    >
+                        <LogOut className="w-4 h-4" />
+                    </Button>
                 </div>
             </header>
 
@@ -126,7 +266,6 @@ export default function NegocioPage() {
 
                         <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
                             {!pedidos ? (
-                                // Skeletons
                                 [1, 2].map(i => (
                                     <Card key={i} className="opacity-50">
                                         <CardHeader className="pb-2">
@@ -217,6 +356,38 @@ export default function NegocioPage() {
                                                         </div>
                                                     </CardContent>
                                                     <CardFooter className="p-3 bg-slate-50 rounded-b-lg flex flex-col gap-2">
+                                                        <div className="flex gap-2 w-full">
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => handlePrintOrderTicket(pedido)}
+                                                                className="flex-1 border-slate-300 text-slate-600 hover:bg-slate-100"
+                                                            >
+                                                                <Printer className="w-3 h-3 mr-1" /> Comanda
+                                                            </Button>
+                                                            {(col.id === 'LISTO' || col.id === 'ENTREGADO') && (
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    onClick={() => handlePrintReceiptTicket(pedido)}
+                                                                    className="flex-1 border-slate-300 text-slate-600 hover:bg-slate-100"
+                                                                >
+                                                                    <Printer className="w-3 h-3 mr-1" /> Cuenta
+                                                                </Button>
+                                                            )}
+                                                        </div>
+
+                                                        {col.id !== 'CANCELADO' && col.id !== 'ENTREGADO' && (
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => openAddItemModal(pedido.id)}
+                                                                className="w-full border-dashed border-slate-300 text-slate-600 hover:bg-slate-100"
+                                                            >
+                                                                <Plus className="w-4 h-4 mr-1" /> Agregar Producto
+                                                            </Button>
+                                                        )}
+
                                                         <div className="flex justify-between gap-2 w-full">
                                                             {col.id !== 'RECIBIDO' && col.id !== 'CANCELADO' ? (
                                                                 <Button
@@ -260,6 +431,69 @@ export default function NegocioPage() {
                     </div>
                 ))}
             </div>
+
+            <Dialog open={isAddingItem} onOpenChange={setIsAddingItem}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Agregar Producto al Pedido #{selectedOrderId}</DialogTitle>
+                        <DialogDescription>Selecciona un producto para agregar.</DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <Label>Producto</Label>
+                            <select
+                                className="w-full p-2 border rounded-md"
+                                onChange={(e) => {
+                                    const prod = products.find(p => p.id === Number(e.target.value));
+                                    setSelectedProduct(prod || null);
+                                    setSelectedVariantId('');
+                                }}
+                                value={selectedProduct?.id || ''}
+                            >
+                                <option value="">Seleccionar producto...</option>
+                                {products.map(p => (
+                                    <option key={p.id} value={p.id}>{p.nombre} - ${p.precio}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {selectedProduct?.variantes && selectedProduct.variantes.length > 0 && (
+                            <div className="space-y-2">
+                                <Label>Variante</Label>
+                                <RadioGroup value={selectedVariantId} onValueChange={setSelectedVariantId}>
+                                    {selectedProduct.variantes.map((v) => (
+                                        <div key={v.id} className="flex items-center space-x-2">
+                                            <RadioGroupItem value={v.id.toString()} id={`v-${v.id}`} />
+                                            <Label htmlFor={`v-${v.id}`}>{v.nombre} (${v.precio})</Label>
+                                        </div>
+                                    ))}
+                                </RadioGroup>
+                            </div>
+                        )}
+
+                        <div className="space-y-2">
+                            <Label>Cantidad</Label>
+                            <div className="flex items-center gap-3">
+                                <Button variant="outline" size="icon" onClick={() => setQuantity(Math.max(1, quantity - 1))}>
+                                    <Minus className="w-4 h-4" />
+                                </Button>
+                                <span className="text-lg font-bold w-8 text-center">{quantity}</span>
+                                <Button variant="outline" size="icon" onClick={() => setQuantity(quantity + 1)}>
+                                    <Plus className="w-4 h-4" />
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsAddingItem(false)}>Cancelar</Button>
+                        <Button onClick={handleAddItemSubmit} disabled={submittingItem || !selectedProduct}>
+                            {submittingItem ? 'Agregando...' : 'Agregar'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div >
     );
 }

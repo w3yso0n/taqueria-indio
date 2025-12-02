@@ -56,8 +56,8 @@ export default function ClientePage() {
     const [metodoPago, setMetodoPago] = useState('');
 
     // Business Panel
-    const [showPasswordDialog, setShowPasswordDialog] = useState(false);
-    const [password, setPassword] = useState('');
+    // const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+    // const [password, setPassword] = useState('');
 
     // Variantes modal
     const [selectedProduct, setSelectedProduct] = useState<Producto | null>(null);
@@ -183,15 +183,6 @@ export default function ClientePage() {
 
     const totalItems = cart.reduce((sum, item) => sum + item.cantidad, 0);
 
-    const handleBusinessAccess = () => {
-        if (password === "12345678") {
-            setShowPasswordDialog(false);
-            router.push("/negocio");
-        } else {
-            toast.error("Contraseña incorrecta");
-            setPassword('');
-        }
-    };
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-orange-50 via-yellow-50 to-red-50 pb-24">
@@ -218,15 +209,16 @@ export default function ClientePage() {
                         </Button>
                     </Link>
 
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-xs hover:bg-orange-50 gap-1 text-slate-700"
-                        onClick={() => setShowPasswordDialog(true)}
-                    >
-                        <Store className="w-3 h-3" />
-                        Negocio
-                    </Button>
+                    <Link href="/negocio">
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-xs hover:bg-orange-50 gap-1 text-slate-700"
+                        >
+                            <Store className="w-3 h-3" />
+                            Negocio
+                        </Button>
+                    </Link>
 
                     <Button
                         variant="ghost"
@@ -497,34 +489,8 @@ export default function ClientePage() {
                 </DialogContent>
             </Dialog>
 
-            {/* DIALOG NEGOCIO */}
-            <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
-                <DialogContent className="bg-white">
-                    <DialogHeader>
-                        <DialogTitle className="text-slate-800">Acceso al Panel</DialogTitle>
-                        <DialogDescription className="text-slate-600">Ingresa la contraseña</DialogDescription>
-                    </DialogHeader>
+            {/* DIALOG NEGOCIO REMOVED */}
 
-                    <Input
-                        type="password"
-                        placeholder="Contraseña"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && handleBusinessAccess()}
-                        autoFocus
-                        className="my-4"
-                    />
-
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setShowPasswordDialog(false)} className="text-slate-700">
-                            Cancelar
-                        </Button>
-                        <Button onClick={handleBusinessAccess} className="text-white bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600">
-                            Acceder
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
         </div>
     );
 }
