@@ -1,19 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { api } from '../../lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import { ChefHat } from 'lucide-react';
 import { toast } from 'sonner';
-import { Store, Loader2 } from 'lucide-react';
 
-export default function LoginPage() {
+function LoginForm() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const from = searchParams.get('from') || '/negocio';
-
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
@@ -23,86 +21,111 @@ export default function LoginPage() {
         setLoading(true);
 
         try {
-            const res = await fetch('/api/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password }),
-            });
+            await api.post('/auth/login', { email, password });
+            toast.success('Inicio de sesión exitoso');
 
-            const data = await res.json();
-
-            if (!res.ok) {
-                throw new Error(data.error || 'Error al iniciar sesión');
-            }
-
-            toast.success('Bienvenido');
-            router.push(from);
-            router.refresh();
+            const redirect = searchParams?.get('redirect') || '/negocio';
+            router.push(redirect);
         } catch (error: any) {
-            toast.error(error.message);
+            console.error('Login error:', error);
+            toast.error(error.message || 'Error al iniciar sesión');
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 via-yellow-50 to-red-50 p-4">
-            <Card className="w-full max-w-md shadow-xl border-orange-100/50 bg-white/90 backdrop-blur-sm">
-                <CardHeader className="text-center">
-                    <div className="mx-auto bg-gradient-to-br from-orange-500 to-red-500 p-3 rounded-xl shadow-lg mb-4 w-fit">
-                        <Store className="text-white w-8 h-8" />
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 p-4">
+            <div className="w-full max-w-md">
+                <div className="bg-white rounded-2xl shadow-2xl p-8 space-y-6 border border-orange-100">
+                    {/* Header */}
+                    <div className="text-center space-y-2">
+                        <div className="flex justify-center mb-4">
+                            <div className="bg-gradient-to-br from-orange-500 to-amber-600 p-4 rounded-2xl shadow-lg">
+                                <ChefHat className="w-12 h-12 text-white" strokeWidth={2} />
+                            </div>
+                        </div>
+                        <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
+                            Taquería El Indio
+                        </h1>
+                        <p className="text-slate-500 text-sm">Panel Administrativo</p>
                     </div>
-                    <CardTitle className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-                        Panel de Negocio
-                    </CardTitle>
-                    <CardDescription>
-                        Ingresa tus credenciales para acceder
-                    </CardDescription>
-                </CardHeader>
-                <form onSubmit={handleLogin}>
-                    <CardContent className="space-y-4">
+
+                    {/* Form */}
+                    <form onSubmit={handleLogin} className="space-y-4">
                         <div className="space-y-2">
-                            <Label htmlFor="email">Correo Electrónico</Label>
+                            <Label htmlFor="email" className="text-slate-700 font-medium">
+                                Correo electrónico
+                            </Label>
                             <Input
                                 id="email"
                                 type="email"
-                                placeholder="admin@taqueria.com"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
+                                placeholder="admin@taqueria.com"
                                 required
-                                className="border-orange-200 focus-visible:ring-orange-500"
+                                className="border-slate-200 focus:border-orange-400 focus:ring-orange-400"
                             />
                         </div>
+
                         <div className="space-y-2">
-                            <Label htmlFor="password">Contraseña</Label>
+                            <Label htmlFor="password" className="text-slate-700 font-medium">
+                                Contraseña
+                            </Label>
                             <Input
                                 id="password"
                                 type="password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
+                                placeholder="••••••••"
                                 required
-                                className="border-orange-200 focus-visible:ring-orange-500"
+                                className="border-slate-200 focus:border-orange-400 focus:ring-orange-400"
                             />
                         </div>
-                    </CardContent>
-                    <CardFooter>
+
                         <Button
                             type="submit"
-                            className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold shadow-md hover:shadow-lg transition-all"
                             disabled={loading}
+                            className="w-full bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-semibold py-6 text-base shadow-lg hover:shadow-xl transition-all duration-200"
                         >
                             {loading ? (
-                                <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Entrando...
-                                </>
+                                <div className="flex items-center justify-center gap-2">
+                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                    Iniciando sesión...
+                                </div>
                             ) : (
                                 'Iniciar Sesión'
                             )}
                         </Button>
-                    </CardFooter>
-                </form>
-            </Card>
+                    </form>
+
+                    {/* Footer */}
+                    <div className="pt-4 border-t border-slate-100">
+                        <p className="text-center text-xs text-slate-400">
+                            Credenciales de prueba: admin@taqueria.com / admin123
+                        </p>
+                    </div>
+                </div>
+
+                {/* Branding */}
+                <p className="text-center text-sm text-slate-500 mt-6">
+                    Sistema de gestión de pedidos
+                </p>
+            </div>
         </div>
+    );
+}
+
+export default function LoginPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50">
+                <div className="text-center">
+                    <div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto" />
+                </div>
+            </div>
+        }>
+            <LoginForm />
+        </Suspense>
     );
 }
