@@ -25,12 +25,14 @@ function LoginForm() {
             toast.success('Inicio de sesión exitoso');
 
             const redirect = searchParams?.get('redirect') || '/negocio';
-            router.push(redirect);
+
+            // Usar window.location.href en lugar de router.push para asegurar
+            // que la cookie de sesión se propague correctamente antes de la navegación
+            window.location.href = redirect;
         } catch (error: any) {
             console.error('Login error:', error);
             toast.error(error.message || 'Error al iniciar sesión');
-        } finally {
-            setLoading(false);
+            setLoading(false); // Solo establecer loading a false en error
         }
     };
 

@@ -144,7 +144,7 @@ export default function NegocioPage() {
             createdAt: pedido.createdAt,
             printedBy: 'admin@taqueria.com'
         });
-        printTicket(ticketHtml).catch(err => {
+        printTicket(ticketHtml, `Comanda #${pedido.id} - ${pedido.clienteNombre}`).catch(err => {
             console.error('Print error:', err);
             toast.error('Error al imprimir comanda');
         });
@@ -167,7 +167,7 @@ export default function NegocioPage() {
             createdAt: pedido.createdAt,
             printedBy: 'admin@taqueria.com'
         });
-        printTicket(ticketHtml).catch(err => {
+        printTicket(ticketHtml, `Cuenta #${pedido.id} - ${pedido.clienteNombre}`).catch(err => {
             console.error('Print error:', err);
             toast.error('Error al imprimir cuenta');
         });
