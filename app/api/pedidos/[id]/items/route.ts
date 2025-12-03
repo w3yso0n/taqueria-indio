@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
-import { getConnection } from '@/lib/db';
+import { getConnection, query } from '@/lib/db';
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
+import { normalizarNumeroPlato } from '@/lib/pedido-utils';
 
 export async function POST(
     request: Request,
@@ -12,7 +13,7 @@ export async function POST(
 
     try {
         const body = await request.json();
-        const { productoId, cantidad, notas, varianteId } = body;
+        const { productoId, cantidad, notas, varianteId, numeroPlato } = body;
 
         // 1. Validation
         if (!productoId || !cantidad || cantidad <= 0) {
@@ -43,6 +44,12 @@ export async function POST(
                 { status: 400 }
             );
         }
+
+        // 2b. Get existing items to determine next plate number
+        const [existingItems] = await connection.execute<RowDataPacket[]>(
+            'SELECT numeroPlato FROM pedido_items WHERE pedidoId = ?',
+            [pedidoId]
+        );
 
         // 3. Get Product/Variant Price & Validate
         let precio = 0;
@@ -79,10 +86,15 @@ export async function POST(
             precio = parseFloat(productos[0].precio);
         }
 
-        // 4. Insert Item
+        // 4. Insert Item with normalized numeroPlato
+        const normalizedNumeroPlato = normalizarNumeroPlato(
+            numeroPlato,
+            existingItems.map(i => ({ numeroPlato: i.numeroPlato }))
+        );
+
         await connection.execute(
-            'INSERT INTO pedido_items (pedidoId, productoId, cantidad, precioUnitario, notas, varianteId, varianteNombre) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [pedidoId, productoId, cantidad, precio, notas ?? null, varianteId ?? null, varianteNombre ?? null]
+            'INSERT INTO pedido_items (pedidoId, productoId, cantidad, precioUnitario, notas, varianteId, varianteNombre, numeroPlato) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            [pedidoId, productoId, cantidad, precio, notas ?? null, varianteId ?? null, varianteNombre ?? null, normalizedNumeroPlato]
         );
 
         // 5. Update Order Total (Atomic)

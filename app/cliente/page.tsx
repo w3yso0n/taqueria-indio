@@ -42,6 +42,7 @@ interface CartItem {
     varianteId?: number;
     varianteNombre?: string;
     precioCalculado?: number;
+    numeroPlato: number; // ← NUEVO para distribución por platos
 }
 
 export default function ClientePage() {
@@ -54,6 +55,7 @@ export default function ClientePage() {
     const [successOpen, setSuccessOpen] = useState(false);
     const [isCartOpen, setIsCartOpen] = useState(false);
     const [metodoPago, setMetodoPago] = useState('');
+    const [platosDisponibles, setPlatosDisponibles] = useState<number[]>([1]); // ← NUEVO
 
     // Business Panel
     // const [showPasswordDialog, setShowPasswordDialog] = useState(false);
@@ -75,6 +77,16 @@ export default function ClientePage() {
                 setLoading(false);
             });
     }, []);
+
+    // Actualizar platos disponibles cuando el carrito cambia
+    useEffect(() => {
+        if (cart.length > 0) {
+            const platosConItems = [...new Set(cart.map(i => i.numeroPlato))].sort((a, b) => a - b);
+            setPlatosDisponibles(platosConItems);
+        } else {
+            setPlatosDisponibles([1]);
+        }
+    }, [cart]);
 
     const handleAddToCartClick = (producto: Producto) => {
         if (producto.variantes && producto.variantes.length > 0) {
@@ -122,7 +134,8 @@ export default function ClientePage() {
                     notas: '',
                     varianteId: variante?.id,
                     varianteNombre: variante?.nombre,
-                    precioCalculado: variante ? variante.precio : producto.precio
+                    precioCalculado: variante ? variante.precio : producto.precio,
+                    numeroPlato: 1 // ← Por defecto al plato 1
                 }
             ];
         });
@@ -141,6 +154,20 @@ export default function ClientePage() {
         );
     };
 
+    // Mover item a otro plato
+    const moverItemAPlato = (indexItem: number, nuevoPlato: number) => {
+        setCart(prev => prev.map((item, i) =>
+            i === indexItem ? { ...item, numeroPlato: nuevoPlato } : item
+        ));
+    };
+
+    // Agregar nuevo plato
+    const agregarNuevoPlato = () => {
+        const maxPlato = Math.max(...cart.map(i => i.numeroPlato), 0);
+        const nuevoPlato = maxPlato + 1;
+        setPlatosDisponibles(prev => [...prev, nuevoPlato].sort((a, b) => a - b));
+    };
+
     const handleSubmit = async () => {
         if (!nombre.trim()) {
             toast.error("Ingresa tu nombre");
@@ -150,17 +177,20 @@ export default function ClientePage() {
 
         setSubmitting(true);
         try {
+            const cartCompactado = compactarPlatos();
+
             await api.post('/pedidos', {
                 clienteNombre: nombre,
                 tipo: 'LOCAL',
                 metodoPago: metodoPago || null,
-                items: cart.map(item => ({
+                items: cartCompactado.map(item => ({
                     productoId: item.producto.id,
                     cantidad: item.cantidad,
                     notas: item.notas,
                     varianteId: item.varianteId,
                     varianteNombre: item.varianteNombre,
-                    precioCalculado: item.precioCalculado
+                    precioCalculado: item.precioCalculado,
+                    numeroPlato: item.numeroPlato
                 }))
             });
 
@@ -174,6 +204,16 @@ export default function ClientePage() {
         } finally {
             setSubmitting(false);
         }
+    };
+
+    // Compactar platos antes de enviar
+    const compactarPlatos = () => {
+        const platosOrdenados = [...new Set(cart.map(i => i.numeroPlato))].sort((a, b) => a - b);
+        const mapaPlatos = new Map(platosOrdenados.map((plato, idx) => [plato, idx + 1]));
+        return cart.map(item => ({
+            ...item,
+            numeroPlato: mapaPlatos.get(item.numeroPlato) || 1
+        }));
     };
 
     const total = cart.reduce(
@@ -340,7 +380,7 @@ export default function ClientePage() {
                             <DrawerDescription className="text-slate-600">Revisa tus items</DrawerDescription>
                         </DrawerHeader>
 
-                        {/* ITEMS */}
+                        {/* ITEMS AGRUPADOS POR PLATO */}
                         <div className="p-4 space-y-3 max-h-[50vh] overflow-y-auto">
                             <AnimatePresence mode="popLayout">
                                 {cart.length === 0 ? (
@@ -352,38 +392,114 @@ export default function ClientePage() {
                                         <ShoppingCart className="w-16 h-16 mx-auto mb-4 opacity-30" />
                                         Carrito vacío
                                     </motion.div>
-                                ) : cart.map((item, idx) => (
-                                    <motion.div
-                                        key={`${item.producto.id}_${idx}`}
-                                        initial={{ opacity: 0, x: -20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        exit={{ opacity: 0, x: 20 }}
-                                        className="flex items-center justify-between bg-white/80 backdrop-blur-md p-4 rounded-2xl border border-orange-100/50 shadow-lg"
-                                    >
-                                        <div className="flex-1">
-                                            <div className="font-semibold text-slate-900">{item.producto.nombre}</div>
-                                            {item.varianteNombre && (
-                                                <div className="text-xs text-slate-500 mb-1">
-                                                    {item.varianteNombre}
-                                                </div>
-                                            )}
-                                            <div className="text-sm text-orange-600 font-medium">${item.precioCalculado}</div>
-                                        </div>
+                                ) : (
+                                    <>
+                                        {platosDisponibles.map(numeroPlato => {
+                                            const itemsDelPlato = cart
+                                                .map((item, idx) => ({ ...item, originalIndex: idx }))
+                                                .filter(item => item.numeroPlato === numeroPlato);
 
-                                        <div className="flex items-center gap-2">
-                                            <Button variant="outline" size="icon" onClick={() => updateQuantity(idx, -1)} className="text-slate-700">
-                                                <Minus className="w-3 h-3" />
-                                            </Button>
-                                            <span className="w-8 text-center font-bold">{item.cantidad}</span>
-                                            <Button variant="outline" size="icon" onClick={() => updateQuantity(idx, 1)} className="text-slate-700">
-                                                <Plus className="w-3 h-3" />
-                                            </Button>
-                                            <Button variant="ghost" size="icon" onClick={() => removeFromCart(idx)}>
-                                                <Trash2 className="w-4 h-4 text-red-500" />
-                                            </Button>
-                                        </div>
-                                    </motion.div>
-                                ))}
+                                            if (itemsDelPlato.length === 0) return null;
+
+                                            return (
+                                                <motion.div
+                                                    key={`plato-${numeroPlato}`}
+                                                    initial={{ opacity: 0, y: -10 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    className="border-2 border-orange-200 rounded-2xl p-3 bg-white shadow-md"
+                                                >
+                                                    <div className="flex justify-between items-center mb-3">
+                                                        <h3 className="font-bold text-orange-600 text-sm">
+                                                            🍽️ Plato {numeroPlato}
+                                                        </h3>
+                                                        <Badge variant="outline" className="text-xs text-slate-600">
+                                                            {itemsDelPlato.reduce((sum, i) => sum + i.cantidad, 0)} items
+                                                        </Badge>
+                                                    </div>
+
+                                                    <div className="space-y-2">
+                                                        {itemsDelPlato.map((item) => (
+                                                            <motion.div
+                                                                key={`item-${item.originalIndex}`}
+                                                                initial={{ opacity: 0, x: -20 }}
+                                                                animate={{ opacity: 1, x: 0 }}
+                                                                exit={{ opacity: 0, x: 20 }}
+                                                                className="flex items-center gap-2 p-2 bg-orange-50/50 rounded-lg"
+                                                            >
+                                                                <div className="flex-1 min-w-0">
+                                                                    <div className="font-semibold text-slate-900 text-sm truncate">
+                                                                        {item.producto.nombre}
+                                                                    </div>
+                                                                    {item.varianteNombre && (
+                                                                        <div className="text-xs text-slate-500">
+                                                                            {item.varianteNombre}
+                                                                        </div>
+                                                                    )}
+                                                                    <div className="text-sm text-orange-600 font-medium">
+                                                                        ${item.precioCalculado}
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* Selector de plato (minimalista) */}
+                                                                {platosDisponibles.length > 1 && (
+                                                                    <select
+                                                                        value={item.numeroPlato}
+                                                                        onChange={(e) => moverItemAPlato(item.originalIndex, Number(e.target.value))}
+                                                                        className="text-xs border border-slate-300 rounded px-1.5 py-1 bg-white text-slate-700 cursor-pointer hover:border-orange-400 transition-colors"
+                                                                    >
+                                                                        {platosDisponibles.map(p => (
+                                                                            <option key={p} value={p}>Plato {p}</option>
+                                                                        ))}
+                                                                    </select>
+                                                                )}
+
+                                                                {/* Controles de cantidad */}
+                                                                <div className="flex items-center gap-1">
+                                                                    <Button
+                                                                        variant="outline"
+                                                                        size="icon"
+                                                                        onClick={() => updateQuantity(item.originalIndex, -1)}
+                                                                        className="h-7 w-7 text-slate-700"
+                                                                    >
+                                                                        <Minus className="w-3 h-3" />
+                                                                    </Button>
+                                                                    <span className="w-6 text-center font-bold text-sm">
+                                                                        {item.cantidad}
+                                                                    </span>
+                                                                    <Button
+                                                                        variant="outline"
+                                                                        size="icon"
+                                                                        onClick={() => updateQuantity(item.originalIndex, 1)}
+                                                                        className="h-7 w-7 text-slate-700"
+                                                                    >
+                                                                        <Plus className="w-3 h-3" />
+                                                                    </Button>
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        onClick={() => removeFromCart(item.originalIndex)}
+                                                                        className="h-7 w-7"
+                                                                    >
+                                                                        <Trash2 className="w-4 h-4 text-red-500" />
+                                                                    </Button>
+                                                                </div>
+                                                            </motion.div>
+                                                        ))}
+                                                    </div>
+                                                </motion.div>
+                                            );
+                                        })}
+
+                                        {/* Botón para agregar nuevo plato */}
+                                        <Button
+                                            onClick={agregarNuevoPlato}
+                                            variant="outline"
+                                            className="w-full border-dashed border-2 border-orange-300 text-orange-600 hover:bg-orange-50 hover:border-orange-400"
+                                        >
+                                            <Plus className="w-4 h-4 mr-2" /> Agregar Plato
+                                        </Button>
+                                    </>
+                                )}
                             </AnimatePresence>
                         </div>
 
@@ -410,11 +526,11 @@ export default function ClientePage() {
                             </Button>
                         </div>
                     </div>
-                </DrawerContent>
-            </Drawer>
+                </DrawerContent >
+            </Drawer >
 
             {/* DIALOG DE VARIANTES */}
-            <Dialog open={optionsModalOpen} onOpenChange={setOptionsModalOpen}>
+            < Dialog open={optionsModalOpen} onOpenChange={setOptionsModalOpen} >
                 <DialogContent className="bg-gradient-to-br from-orange-50 to-red-50">
                     <DialogHeader>
                         <DialogTitle className="text-2xl bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
@@ -454,10 +570,10 @@ export default function ClientePage() {
                         </Button>
                     </DialogFooter>
                 </DialogContent>
-            </Dialog>
+            </Dialog >
 
             {/* DIALOG DE ÉXITO */}
-            <Dialog open={successOpen} onOpenChange={setSuccessOpen}>
+            < Dialog open={successOpen} onOpenChange={setSuccessOpen} >
                 <DialogContent className="bg-gradient-to-br from-orange-50 via-white to-red-50 border-2 border-orange-200">
                     <div className="text-center py-6">
                         <div className="mb-4">
@@ -487,10 +603,10 @@ export default function ClientePage() {
                         </Button>
                     </div>
                 </DialogContent>
-            </Dialog>
+            </Dialog >
 
             {/* DIALOG NEGOCIO REMOVED */}
 
-        </div>
+        </div >
     );
 }

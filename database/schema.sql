@@ -55,10 +55,12 @@ CREATE TABLE IF NOT EXISTS pedido_items (
   opcionesSeleccionadas JSON NULL,
   varianteId INT NULL,
   varianteNombre VARCHAR(255) NULL,
+  numeroPlato INT DEFAULT 1 NOT NULL,
   createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (pedidoId) REFERENCES pedidos(id) ON DELETE CASCADE,
-  FOREIGN KEY (productoId) REFERENCES productos(id)
+  FOREIGN KEY (productoId) REFERENCES productos(id),
+  INDEX idx_numeroPlato (numeroPlato)
 );
 
 -- Sample data for productos

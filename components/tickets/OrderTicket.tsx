@@ -1,6 +1,7 @@
 import React from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { agruparPorPlato } from '@/lib/pedido-utils';
 
 interface OrderItem {
     id: number;
@@ -8,6 +9,8 @@ interface OrderItem {
     cantidad: number;
     notas?: string;
     varianteNombre?: string;
+    numeroPlato: number; // ← NUEVO
+    precioUnitario?: number; // Opcional, no se usa en comanda de cocina
 }
 
 interface OrderTicketProps {
@@ -45,17 +48,25 @@ export function OrderTicket({ orderId, customerName, orderType, items, createdAt
             </div>
 
             <div className="ticket-items">
-                {items.map((item) => (
-                    <div key={item.id} className="ticket-item">
-                        <div className="item-qty-name">
-                            {item.cantidad}x {item.productoNombre}
-                        </div>
-                        {item.varianteNombre && (
-                            <div className="item-variant">  ({item.varianteNombre})</div>
-                        )}
-                        {item.notas && (
-                            <div className="item-notes">  Nota: {item.notas}</div>
-                        )}
+                {agruparPorPlato(items.map(item => ({
+                    ...item,
+                    precioUnitario: item.precioUnitario || 0
+                }))).map((plato) => (
+                    <div key={plato.numeroPlato} className="ticket-plato">
+                        <div className="plato-header">*** PLATO {plato.numeroPlato} ***</div>
+                        {plato.items.map((item) => (
+                            <div key={item.id} className="ticket-item">
+                                <div className="item-qty-name">
+                                    {item.cantidad}x {item.productoNombre}
+                                </div>
+                                {item.varianteNombre && (
+                                    <div className="item-variant">  ({item.varianteNombre})</div>
+                                )}\n                                {item.notas && (
+                                    <div className="item-notes">  Nota: {item.notas}</div>
+                                )}
+                            </div>
+                        ))}
+                        <div className="plato-separator">- - - - - - - - - - - - - - - -</div>
                     </div>
                 ))}
             </div>
@@ -105,8 +116,24 @@ export function renderOrderTicketToString(props: OrderTicketProps): string {
             .ticket-items {
                 margin-bottom: 8px;
             }
+            .ticket-plato {
+                margin-bottom: 12px;
+            }
+            .plato-header {
+                font-weight: bold;
+                text-align: center;
+                margin-bottom: 6px;
+                margin-top: 4px;
+                font-size: 11px;
+            }
+            .plato-separator {
+                margin-top: 6px;
+                margin-bottom: 4px;
+                text-align: center;
+                font-size: 10px;
+            }
             .ticket-item {
-                margin-bottom: 8px;
+                margin-bottom: 6px;
             }
             .item-qty-name {
                 font-weight: bold;
@@ -145,11 +172,20 @@ export function renderOrderTicketToString(props: OrderTicketProps): string {
             </div>
 
             <div class="ticket-items">
-                ${props.items.map(item => `
-                    <div class="ticket-item">
-                        <div class="item-qty-name">${item.cantidad}x ${item.productoNombre}</div>
-                        ${item.varianteNombre ? `<div class="item-variant">  (${item.varianteNombre})</div>` : ''}
-                        ${item.notas ? `<div class="item-notes">  Nota: ${item.notas}</div>` : ''}
+                ${agruparPorPlato(props.items.map(item => ({
+        ...item,
+        precioUnitario: item.precioUnitario || 0
+    }))).map(plato => `
+                    <div class="ticket-plato">
+                        <div class="plato-header">*** PLATO ${plato.numeroPlato} ***</div>
+                        ${plato.items.map(item => `
+                            <div class="ticket-item">
+                                <div class="item-qty-name">${item.cantidad}x ${item.productoNombre}</div>
+                                ${item.varianteNombre ? `<div class="item-variant">  (${item.varianteNombre})</div>` : ''}
+                                ${item.notas ? `<div class="item-notes">  Nota: ${item.notas}</div>` : ''}
+                            </div>
+                        `).join('')}
+                        <div class="plato-separator">- - - - - - - - - - - - - - - -</div>
                     </div>
                 `).join('')}
             </div>

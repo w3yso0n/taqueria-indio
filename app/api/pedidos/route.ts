@@ -3,6 +3,7 @@
 import { NextResponse } from 'next/server';
 import { query, getConnection } from '@/lib/db';
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
+import { normalizarNumeroPlato, compactarPlatos } from '@/lib/pedido-utils';
 
 interface PedidoItem {
     id: number;
@@ -50,10 +51,11 @@ export async function GET(request: Request) {
         const pedidosWithItems = await Promise.all(
             pedidos.map(async (pedido) => {
                 const items = await query<RowDataPacket[]>(
-                    `SELECT pi.id, pi.cantidad, pi.precioUnitario, pi.notas, pi.varianteNombre, p.nombre as productoNombre
+                    `SELECT pi.id, pi.cantidad, pi.precioUnitario, pi.notas, pi.varianteNombre, pi.numeroPlato, p.nombre as productoNombre
                      FROM pedido_items pi
                      JOIN productos p ON pi.productoId = p.id
-                     WHERE pi.pedidoId = ?`,
+                     WHERE pi.pedidoId = ?
+                     ORDER BY pi.numeroPlato ASC, pi.id ASC`,
                     [pedido.id]
                 );
 
@@ -64,10 +66,12 @@ export async function GET(request: Request) {
                         producto: {
                             nombre: item.productoNombre
                         },
+                        productoNombre: item.productoNombre,
                         cantidad: item.cantidad,
                         precioUnitario: item.precioUnitario,
                         notas: item.notas,
-                        varianteNombre: item.varianteNombre
+                        varianteNombre: item.varianteNombre,
+                        numeroPlato: item.numeroPlato || 1
                     }))
                 };
             })
@@ -100,7 +104,7 @@ export async function POST(request: Request) {
         // Start transaction
         await connection.beginTransaction();
 
-        // Calculate total
+        // Calculate total and normalize numeroPlato
         let total = 0;
         const itemsWithPrices = await Promise.all(
             items.map(async (item: any) => {
@@ -135,10 +139,14 @@ export async function POST(request: Request) {
 
                 return {
                     ...item,
-                    precioUnitario: precio
+                    precioUnitario: precio,
+                    numeroPlato: normalizarNumeroPlato(item.numeroPlato, [])
                 };
             })
         );
+
+        // Compact plates to ensure consecutive numbering (1, 2, 3...)
+        const itemsCompactados = compactarPlatos(itemsWithPrices);
 
         // Insert pedido
         const [pedidoResult] = await connection.execute<ResultSetHeader>(
@@ -148,11 +156,11 @@ export async function POST(request: Request) {
 
         const pedidoId = pedidoResult.insertId;
 
-        // Insert pedido items
-        for (const item of itemsWithPrices) {
+        // Insert pedido items with numeroPlato
+        for (const item of itemsCompactados) {
             await connection.execute(
-                'INSERT INTO pedido_items (pedidoId, productoId, cantidad, precioUnitario, notas, varianteId, varianteNombre) VALUES (?, ?, ?, ?, ?, ?, ?)',
-                [pedidoId, item.productoId, item.cantidad, item.precioUnitario, item.notas || null, item.varianteId || null, item.varianteNombre || null]
+                'INSERT INTO pedido_items (pedidoId, productoId, cantidad, precioUnitario, notas, varianteId, varianteNombre, numeroPlato) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                [pedidoId, item.productoId, item.cantidad, item.precioUnitario, item.notas || null, item.varianteId || null, item.varianteNombre || null, item.numeroPlato]
             );
         }
 
@@ -166,10 +174,11 @@ export async function POST(request: Request) {
         );
 
         const pedidoItems = await connection.execute<RowDataPacket[]>(
-            `SELECT pi.id, pi.cantidad, pi.precioUnitario, pi.notas, pi.varianteNombre, p.nombre as productoNombre
+            `SELECT pi.id, pi.cantidad, pi.precioUnitario, pi.notas, pi.varianteNombre, pi.numeroPlato, p.nombre as productoNombre
              FROM pedido_items pi
              JOIN productos p ON pi.productoId = p.id
-             WHERE pi.pedidoId = ?`,
+             WHERE pi.pedidoId = ?
+             ORDER BY pi.numeroPlato ASC, pi.id ASC`,
             [pedidoId]
         );
 
@@ -180,10 +189,12 @@ export async function POST(request: Request) {
                 producto: {
                     nombre: item.productoNombre
                 },
+                productoNombre: item.productoNombre,
                 cantidad: item.cantidad,
                 precioUnitario: item.precioUnitario,
                 notas: item.notas,
-                varianteNombre: item.varianteNombre
+                varianteNombre: item.varianteNombre,
+                numeroPlato: item.numeroPlato || 1
             }))
         };
 

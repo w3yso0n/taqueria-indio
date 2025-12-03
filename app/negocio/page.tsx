@@ -11,6 +11,7 @@ import { ArrowRight, ArrowLeft, Clock, CheckCircle2, ChefHat, Package, Banknote,
 import { printTicket } from '../../lib/print-ticket';
 import { renderOrderTicketToString } from '../../components/tickets/OrderTicket';
 import { renderReceiptTicketToString } from '../../components/tickets/ReceiptTicket';
+import { agruparPorPlato } from '@/lib/pedido-utils';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -137,7 +138,8 @@ export default function NegocioPage() {
                 productoNombre: item.producto?.nombre || item.productoNombre || '',
                 cantidad: item.cantidad,
                 notas: item.notas,
-                varianteNombre: item.varianteNombre
+                varianteNombre: item.varianteNombre,
+                numeroPlato: (item as any).numeroPlato || 1
             })),
             createdAt: pedido.createdAt,
             printedBy: 'admin@taqueria.com'
@@ -306,24 +308,36 @@ export default function NegocioPage() {
                                                         </CardTitle>
                                                     </CardHeader>
                                                     <CardContent className="p-4 pt-2">
-                                                        <div className="space-y-1 mb-3">
-                                                            {pedido.items.map((item, idx) => (
-                                                                <div key={idx} className="text-sm text-slate-600 border-b border-dashed border-slate-100 last:border-0 py-1">
-                                                                    <div className="flex flex-col">
-                                                                        <div className="flex justify-between">
-                                                                            <span><span className="font-bold text-slate-800">{item.cantidad}x</span> {item.producto.nombre}</span>
-                                                                        </div>
-                                                                        {item.varianteNombre && (
-                                                                            <div className="text-xs text-slate-500 pl-4">
-                                                                                {item.varianteNombre}
-                                                                            </div>
-                                                                        )}
-                                                                        {item.notas && (
-                                                                            <div className="text-xs text-amber-600 pl-4 italic">
-                                                                                "{item.notas}"
-                                                                            </div>
-                                                                        )}
+                                                        <div className="space-y-3 mb-3">
+                                                            {agruparPorPlato(pedido.items.map(item => ({
+                                                                ...item,
+                                                                productoNombre: item.producto?.nombre || item.productoNombre || '',
+                                                                numeroPlato: (item as any).numeroPlato || 1
+                                                            }))).map((plato) => (
+                                                                <div key={plato.numeroPlato} className="border-l-4 border-orange-400 pl-3 py-1 bg-orange-50/30 rounded-r">
+                                                                    <div className="text-xs font-bold text-orange-600 mb-1.5 flex items-center gap-1">
+                                                                        <span className="bg-orange-500 text-white px-1.5 py-0.5 rounded text-[10px]">PLATO {plato.numeroPlato}</span>
+                                                                        <span className="text-slate-500 font-normal">({plato.totalCantidad} items)</span>
                                                                     </div>
+                                                                    {plato.items.map((item, idx) => (
+                                                                        <div key={idx} className="text-sm text-slate-600 border-b border-dashed border-slate-100 last:border-0 py-1">
+                                                                            <div className="flex flex-col">
+                                                                                <div className="flex justify-between">
+                                                                                    <span><span className="font-bold text-slate-800">{item.cantidad}x</span> {item.productoNombre}</span>
+                                                                                </div>
+                                                                                {item.varianteNombre && (
+                                                                                    <div className="text-xs text-slate-500 pl-4">
+                                                                                        {item.varianteNombre}
+                                                                                    </div>
+                                                                                )}
+                                                                                {item.notas && (
+                                                                                    <div className="text-xs text-amber-600 pl-4 italic">
+                                                                                        "{item.notas}"
+                                                                                    </div>
+                                                                                )}
+                                                                            </div>
+                                                                        </div>
+                                                                    ))}
                                                                 </div>
                                                             ))}
                                                         </div>
